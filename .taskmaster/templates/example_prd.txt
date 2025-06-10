@@ -1,47 +1,338 @@
 <context>
 # Overview  
-[Provide a high-level overview of your product here. Explain what problem it solves, who it's for, and why it's valuable.]
+BPWatcher is a background GUI automation bot designed to silently interact with the Best Practice (BP) Windows application. It extracts basic patient contact information and sends it to a server without any visible UI or user awareness. This tool addresses the need for automated data extraction from legacy Windows applications that lack proper APIs.
 
 # Core Features  
-[List and describe the main features of your product. For each feature, include:
-- What it does
-- Why it's important
-- How it works at a high level]
+1. **Silent Background Operation**
+   - Runs automatically at system boot via Windows Task Scheduler
+   - Operates with no visible UI, tray icon, or window
+   - Ensures users remain unaware of the automation process
+
+2. **BP Application Automation**
+   - Launches the Best Practice executable
+   - Handles login with stored credentials
+   - Navigates to relevant screens containing patient information
+   - Simulates user interactions without visible UI
+
+3. **Data Extraction**
+   - Takes screenshots of regions containing patient contact information
+   - Applies OCR to extract structured data (names, phone numbers)
+   - Processes images to improve OCR accuracy
+   - Filters to only capture essential contact details
+
+4. **Data Synchronization**
+   - Sends extracted data to a configured HTTPS endpoint
+   - Formats data as JSON for easy processing
+   - Implements secure transmission protocols
+   - Provides optional local logging
 
 # User Experience  
-[Describe the user journey and experience. Include:
-- User personas
-- Key user flows
-- UI/UX considerations]
+Since BPWatcher is designed to run without a UI, the primary "users" are:
+
+1. **System Administrator**
+   - Installs and configures the application
+   - Sets up credentials and endpoint information
+   - Monitors logs for proper operation
+   - Receives minimal interaction points, primarily during setup
+
+2. **Server/API Consumer**
+   - Receives structured patient contact data
+   - Processes information according to business needs
+   - Expects consistent data format and reliable delivery
+
+The UX focuses on zero visibility during operation with simple configuration during setup.
 </context>
 <PRD>
 # Technical Architecture  
-[Outline the technical implementation details:
-- System components
-- Data models
-- APIs and integrations
-- Infrastructure requirements]
+## System Components
+1. **Core Automation Engine**
+   - Python-based headless automation system
+   - Handles window detection, focus, and interaction
+   - Manages application lifecycle (launch, login, navigation)
+
+2. **Screen Capture Module**
+   - Takes targeted screenshots of specific UI regions
+   - Implements screen region detection algorithms
+   - Handles different screen resolutions and scaling
+
+3. **OCR Processing Pipeline**
+   - Pre-processes images (contrast, grayscale) for optimal OCR
+   - Applies Tesseract OCR to extract text
+   - Parses and structures extracted data
+   - Filters for relevant contact information only
+
+4. **Data Transmission Service**
+   - Formats extracted data as JSON
+   - Implements secure HTTPS communication
+   - Handles retry logic and connection failures
+   - Provides logging and error reporting
+
+5. **Stealth Management System**
+   - Ensures no visible windows or UI elements
+   - Manages process priority and resource usage
+   - Implements hooks to prevent accidental visibility
+
+## Data Models
+1. **Patient Contact Record**
+   ```
+   {
+     "first_name": string,
+     "last_name": string,
+     "phone": {
+       "mobile": string (optional),
+       "home": string (optional),
+       "work": string (optional)
+     },
+     "timestamp": ISO8601 datetime,
+     "source_id": string (identifier for BP instance)
+   }
+   ```
+
+2. **Application Configuration**
+   ```
+   {
+     "bp_executable_path": string,
+     "credentials": {
+       "username": string,
+       "password": string (encrypted)
+     },
+     "server_endpoint": string (URL),
+     "capture_interval_seconds": integer,
+     "screen_regions": {
+       "login": [x, y, width, height],
+       "patient_list": [x, y, width, height],
+       ...
+     },
+     "logging": {
+       "enabled": boolean,
+       "level": string,
+       "path": string
+     }
+   }
+   ```
+
+## APIs and Integrations
+1. **External Server API**
+   - HTTPS POST endpoint accepting JSON patient records
+   - Authentication via API key or token
+   - Simple success/failure response
+
+2. **Windows Integration**
+   - Task Scheduler for automatic startup
+   - Windows authentication for BP login
+   - System tray integration (optional admin-only mode)
+
+## Infrastructure Requirements
+1. **Target Environment**
+   - Windows 10/11 workstation
+   - Python 3.8+ runtime
+   - Tesseract OCR engine
+   - Minimum 4GB RAM, 100MB disk space
+   - Network access to target server
+
+2. **Dependencies**
+   - pyautogui, pywinauto, pygetwindow for GUI automation
+   - pytesseract and Pillow for OCR and image processing
+   - requests for network communication
+   - pyinstaller for packaging
 
 # Development Roadmap  
-[Break down the development process into phases:
-- MVP requirements
-- Future enhancements
-- Do not think about timelines whatsoever -- all that matters is scope and detailing exactly what needs to be build in each phase so it can later be cut up into tasks]
+## Phase 1: MVP Foundation
+1. **Basic Automation Framework**
+   - Create core window detection and interaction system
+   - Implement BP application launch and detection
+   - Develop simple navigation capabilities
+   - Build basic screenshot functionality
+
+2. **Login Automation**
+   - Implement credential storage mechanism
+   - Develop login screen detection
+   - Create login form field automation
+   - Add error handling for failed logins
+
+3. **Simple Data Extraction**
+   - Implement basic screenshot capture of patient list
+   - Add preliminary OCR processing
+   - Create simple data structure for extracted information
+   - Implement basic filtering of relevant data
+
+4. **Initial Server Communication**
+   - Develop basic HTTPS POST functionality
+   - Implement simple JSON formatting
+   - Create retry mechanism for failed connections
+   - Add basic logging of transmission results
+
+## Phase 2: Core Functionality Enhancement
+1. **Advanced Navigation**
+   - Implement robust screen detection algorithms
+   - Add support for navigating between different BP screens
+   - Create recovery mechanisms for unexpected states
+   - Develop screen element verification
+
+2. **Improved OCR Processing**
+   - Add image pre-processing for better OCR results
+   - Implement structured data extraction patterns
+   - Create validation rules for extracted data
+   - Add support for different data formats and layouts
+
+3. **Enhanced Stealth Operation**
+   - Implement complete headless operation
+   - Add process priority management
+   - Create hooks to prevent UI visibility
+   - Develop system tray access for administrators only
+
+4. **Robust Error Handling**
+   - Implement comprehensive error detection
+   - Add recovery mechanisms for common failures
+   - Create detailed logging system
+   - Develop self-healing capabilities
+
+## Phase 3: Production Readiness
+1. **Packaging and Deployment**
+   - Create PyInstaller configuration for executable creation
+   - Develop installation script or package
+   - Add Task Scheduler integration
+   - Create uninstallation capabilities
+
+2. **Security Enhancements**
+   - Implement credential encryption
+   - Add secure storage of configuration
+   - Create access controls for admin functions
+   - Develop audit logging
+
+3. **Performance Optimization**
+   - Optimize resource usage during idle periods
+   - Improve OCR processing speed
+   - Enhance screenshot capture efficiency
+   - Reduce memory footprint
+
+4. **Monitoring and Maintenance**
+   - Add health check endpoints
+   - Implement self-diagnostics
+   - Create update mechanism
+   - Develop admin notification system
 
 # Logical Dependency Chain
-[Define the logical order of development:
-- Which features need to be built first (foundation)
-- Getting as quickly as possible to something usable/visible front end that works
-- Properly pacing and scoping each feature so it is atomic but can also be built upon and improved as development approaches]
+## Foundation Layer (Must be built first)
+1. **BP Application Interaction**
+   - Window detection and focus
+   - Basic navigation capabilities
+   - Screenshot functionality
+   - This forms the core foundation that all other features depend on
+
+2. **Authentication System**
+   - Credential storage
+   - Login automation
+   - Session management
+   - Required before any data access is possible
+
+## Visible Results Layer (Getting to something usable quickly)
+3. **Basic Data Extraction**
+   - Simple OCR implementation
+   - Patient list screen capture
+   - Basic data structuring
+   - This provides the first tangible results and validates the approach
+
+4. **Initial Data Transmission**
+   - Server communication
+   - Simple data formatting
+   - Basic error handling
+   - Completes the end-to-end flow, allowing for early testing
+
+## Enhancement Layer (Building upon the foundation)
+5. **OCR Improvements**
+   - Image pre-processing
+   - Advanced text extraction
+   - Data validation
+   - Enhances the quality of extracted data
+
+6. **Navigation Enhancements**
+   - Multi-screen support
+   - Recovery mechanisms
+   - State management
+   - Improves reliability of the automation
+
+## Production Layer (Final polish)
+7. **Stealth Operations**
+   - Complete headless functionality
+   - Process management
+   - Visibility prevention
+   - Makes the application production-ready
+
+8. **Deployment and Packaging**
+   - Executable creation
+   - Installation automation
+   - Scheduling integration
+   - Enables distribution to target environments
 
 # Risks and Mitigations  
-[Identify potential risks and how they'll be addressed:
-- Technical challenges
-- Figuring out the MVP that we can build upon
-- Resource constraints]
+## Technical Challenges
+1. **Risk**: BP application updates may break automation
+   **Mitigation**: 
+   - Implement robust element detection that doesn't rely on exact positions
+   - Add configuration options to adjust for UI changes
+   - Create monitoring to detect and alert on automation failures
+
+2. **Risk**: OCR accuracy may be insufficient for reliable data extraction
+   **Mitigation**:
+   - Implement multiple pre-processing techniques to optimize image quality
+   - Add validation rules to verify extracted data format
+   - Create fallback mechanisms for low-confidence extractions
+
+3. **Risk**: Windows security features may block automation
+   **Mitigation**:
+   - Request appropriate permissions during installation
+   - Implement alternative interaction methods if primary ones are blocked
+   - Add detailed error reporting for permission issues
+
+## MVP Scope Challenges
+1. **Risk**: Initial version may be too complex to deliver quickly
+   **Mitigation**:
+   - Focus on core data extraction from a single screen first
+   - Implement a phased approach with clear milestones
+   - Create a minimal viable product that demonstrates value
+
+2. **Risk**: Silent operation requirements may conflict with debugging needs
+   **Mitigation**:
+   - Implement a debug mode that can be enabled for troubleshooting
+   - Create comprehensive logging that doesn't require UI
+   - Develop remote diagnostics capabilities
+
+## Resource Constraints
+1. **Risk**: Application may consume excessive system resources
+   **Mitigation**:
+   - Optimize screenshot and OCR operations
+   - Implement intelligent polling instead of continuous operation
+   - Add resource monitoring and throttling capabilities
+
+2. **Risk**: Development time may exceed expectations
+   **Mitigation**:
+   - Prioritize features based on core value delivery
+   - Use existing libraries where possible instead of custom implementations
+   - Create clear acceptance criteria for each development phase
 
 # Appendix  
-[Include any additional information:
-- Research findings
-- Technical specifications]
+## OCR Optimization Techniques
+- Grayscale conversion improves Tesseract accuracy by 15-20%
+- Contrast enhancement significantly improves text extraction in BP's interface
+- Region-specific OCR parameters can be tuned for different screen areas
+- Text pattern matching can validate extracted data against expected formats
+
+## BP Application Analysis
+- Login screen appears consistently with same field positions
+- Patient list screen has consistent column layout
+- Contact information appears in predictable regions
+- Application has consistent response times that can be used for reliable automation
+
+## Security Considerations
+- Credentials should be stored with Windows Data Protection API
+- Only basic contact information is extracted, no clinical data
+- All network communication must use TLS 1.2+
+- No data should be stored locally except for logs
+
+## Testing Strategy
+- Automated tests should verify each component independently
+- End-to-end tests should validate the complete workflow
+- Performance testing should measure resource usage over extended periods
+- Security testing should verify that no sensitive data is exposed
 </PRD>
