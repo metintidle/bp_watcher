@@ -1,0 +1,7 @@
+psutil
+pygetwindow
+pyautogui
+pywinauto
+Pillow
+pytesseract
+requests

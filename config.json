@@ -1,0 +1,22 @@
+{
+  "bp_executable_path": "xterm -T BPWatcherTestWindow",
+  "screen_regions": {
+    "test_region": [10, 10, 200, 100],
+    "test_xterm_region": [10, 10, 300, 200]
+  },
+  "credentials": {
+    "username": "testuser",
+    "password": "testpassword"
+  },
+  "login_screen_regions": {
+    "username_field_center": [100, 50],
+    "password_field_center": [100, 80],
+    "login_button_center": [100, 110],
+    "login_success_indicator_region": [5, 5, 400, 50]
+  },
+  "data_extraction_regions": {
+    "patient_list_area": [5, 40, 780, 200],
+    "patient_data_expected_text": "Name: John Doe.*Phone: 123-456-7890"
+  },
+  "server_endpoint": "http://localhost:8000/submit_patient_data"
+}
